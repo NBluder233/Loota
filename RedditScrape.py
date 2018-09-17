@@ -1,5 +1,6 @@
 #! usr/bin/env python3
 import praw
+import Alert
 import pandas as pd
 import datetime as dt
 
@@ -27,4 +28,36 @@ def scrape():
 
     return postDict
 
+def parse(searchTerms):
+    subDict = scrape()
 
+    i = 0
+    postList = []
+
+    # Iterate through all scraped titles
+    while i < len(subDict['title']):
+        _titl = subDict['title'][i]
+        have, want = "", ""
+
+        # Search for faction
+        # TODO: No hardcoded faction, switch between buying/selling
+        if "ORK" in _titl.upper():
+            if "[W]" in _titl.upper():
+                have, want = _titl.upper().split("[W]")
+            elif "(W)" in _titl.upper():
+                have, want = _titl.upper().split("(W)")
+            else:
+                print(_titl)
+
+            if "ORK" in have.upper():
+                postList.append(i)
+        i += 1
+
+    for itm in postList:
+        if searchTerms[0].upper() != "END":
+            for term in searchTerms:
+                if term.upper() in subDict['body'][itm]:
+                    # Send on post info to alert function
+                    Alert.TestAlert(subDict['title'][itm], subDict['url'][itm])
+        else:
+            Alert.TestAlert(subDict['title'][itm], subDict['url'][itm])
